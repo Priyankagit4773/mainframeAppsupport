@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Detailed Shift Task Entry</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      max-width: 1000px;
+      background-color: #d6f0ff; /* Light blue background */
+    }
+    h1 {
+      color: red; /* Main title in red */
+    }
+    h2 {
+      background: #e8e8e8;
+      padding: 10px;
+      margin-top: 30px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 6px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 10px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Shift Task Entry Form</h1>
+
+  <form id="taskForm">
+    <label>Date: <input type="date" id="date" required></label>
+	
+    <label>Shift Officer:
+  <select id="shiftOfficer" required>
+    <option value="">-- Select Officer --</option>
+    <option>Priyanka</option>
+    <option>Chamod</option>
+    <option>Manjari</option>
+    <option>Chathura</option>
+  </select>
+</label>
+
+<label>Shift: 
+  <select id="shift" required>
+    <option value="">-- Select Shift --</option>
+    <option>Morning</option>
+    <option>Night</option>
+  </select>
+</label>
+
+    <h2>General Checks</h2>
+    <label>Check and Give Update on Chat: <input type="text" id="updateChat"></label>
+    <label>Check Transaction Duplicate Records: <input type="text" id="transactionDuplicates"></label>
+    <label>Check Casino Transaction Duplicate Records: <input type="text" id="casinoDuplicates"></label>
+    <label>Check Duplicate Cash Out Records: <input type="text" id="cashoutDuplicates"></label>
+    <label>Check Balance Variance: <input type="text" id="balanceVariance"></label>
+
+    <h2>Live/Retail Server Service</h2>
+    <label>UOF: <input type="text" id="uof"></label>
+    <label>Sports DB: <input type="text" id="sportsDb"></label>
+
+    <h2>Unsettled Count (Last 24 Hours)</h2>
+    <label>SIS: <input type="text" id="sis"></label>
+    <label>TAB: <input type="text" id="tab"></label>
+    <label>KIRON: <input type="text" id="kiron"></label>
+    <label>SPORTS: <input type="text" id="sports"></label>
+    <label>CASINO: <input type="text" id="casino"></label>
+
+    <h2>Manual Settled count On top</h2>
+    <label>SIS: <input type="text" id="manualSis"></label>
+    <label>TAB: <input type="text" id="manualTab"></label>
+    <label>KIRON: <input type="text" id="manualKiron"></label>
+    <label>SPORTS: <input type="text" id="manualSports"></label>
+    <label>CASINO: <input type="text" id="manualCasino"></label>
+
+    <h2>Communication</h2>
+    <label>Sending Mails Requesting Manual Settlement: <input type="text" id="mailRequest"></label>
+	
+	<h2>Every Monday generated report</h2>
+    <label>IPL Report: <input type="text" id="mailRequest"></label>
+
+    <h2>Follow-up</h2>
+    <label>Pending Casino Tickets Not Received: <input type="text" id="pendingCasino"></label>
+	
+	 <h2>Follow-up</h2>
+    <label>Any System Failer / System Slowness in time: <input type="text" id="pendingCasino"></label>
+	
+	 <h2>Follow-up</h2>
+    <label>Any Escalation to Next Shift: <input type="text" id="pendingCasino"></label>
+
+    <button type="submit">Save Entry</button>
+    <p class="success" id="successMessage"></p>
+  </form>
+
+  <button onclick="downloadCSV()">Download CSV</button>
+
+  <h2>Saved Entries</h2>
+  <table id="dataTable">
+    <thead></thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const form = document.getElementById("taskForm");
+    const successMsg = document.getElementById("successMessage");
+    const tableHead = document.querySelector("#dataTable thead");
+    const tableBody = document.querySelector("#dataTable tbody");
+
+    const fields = [
+      "date", "shiftOfficer", "shift",
+      "updateChat", "transactionDuplicates", "casinoDuplicates", "cashoutDuplicates", "balanceVariance",
+      "uof", "sportsDb",
+      "sis", "tab", "kiron", "sports", "casino",
+      "manualSis", "manualTab", "manualKiron", "manualSports", "manualCasino",
+      "mailRequest", "pendingCasino"
+    ];
+
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const entry = {};
+      fields.forEach(id => entry[id] = document.getElementById(id).value);
+      const data = JSON.parse(localStorage.getItem("shiftDetailedTasks") || "[]");
+      data.push(entry);
+      localStorage.setItem("shiftDetailedTasks", JSON.stringify(data));
+      successMsg.textContent = "Data saved successfully!";
+      form.reset();
+      renderTable();
+    });
+
+    function renderTable() {
+      const data = JSON.parse(localStorage.getItem("shiftDetailedTasks") || "[]");
+      if (data.length === 0) {
+        tableHead.innerHTML = "";
+        tableBody.innerHTML = "";
+        return;
+      }
+
+      // Create header
+      tableHead.innerHTML = "<tr>" + fields.map(f => `<th>${f}</th>`).join("") + "</tr>";
+
+      // Create body
+      tableBody.innerHTML = data.map(entry => 
+        "<tr>" + fields.map(f => `<td>${entry[f] || ""}</td>`).join("") + "</tr>"
+      ).join("");
+    }
+
+    function downloadCSV() {
+      const data = JSON.parse(localStorage.getItem("shiftDetailedTasks") || "[]");
+      if (data.length === 0) return alert("No data to download.");
+
+      const headers = fields;
+      const rows = data.map(row => headers.map(f => `"${row[f] || ""}"`).join(","));
+      const csv = [headers.join(","), ...rows].join("\n");
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "detailed_shift_tasks.csv";
+      a.click();
+    }
+
+    // Initialize table
+    renderTable();
+  </script>
+
+</body>
+</html>
