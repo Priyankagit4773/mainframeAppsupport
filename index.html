@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Incident Escalation: App Support → DEV Team</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }
+    h1, h2 { color: #333; }
+    label { display: block; margin: 10px 0 5px; }
+    input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    textarea { height: 80px; }
+    button { padding: 10px 20px; margin: 10px 5px 10px 0; background: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .delete-btn { background: #dc3545; }
+    .delete-btn:hover { background: #c82333; }
+    .success { color: green; margin: 10px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+    th, td { border: 1px solid #ddd; padding: 8px; font-size: 14px; }
+    th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
+
+  <h1>Incident Escalation: App Support → DEV TEAM</h1>
+
+  <div>
+    <h2>Task Escalation Form</h2>
+    <form id="escalationForm">
+      <label for="reportedBy">Reported By:</label>
+      <select id="reportedBy" name="reportedBy" required>
+        <option value="">--Select Name--</option>
+        <option value="Priyanka">Priyanka</option>
+        <option value="Chamod">Chamod</option>
+        <option value="Manjari">Manjari</option>
+        <option value="Chathura">Chathura</option>
+        <option value="Kavisha">Kavisha</option>
+      </select>
+
+      <label for="reportedDate">Reported Date:</label>
+      <input type="date" id="reportedDate" name="reportedDate" required>
+
+      <label for="Report_To">Report To:</label>
+      <input type="text" id="Report_To" name="Report_To" required>
+
+      <label for="application">Application Name:</label>
+      <input type="text" id="application" name="application" required>
+
+      <label for="priority">Priority:</label>
+      <select id="priority" name="priority" required>
+        <option value="">--Select Priority--</option>
+        <option value="Critical">Critical</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+
+      <label for="issue">Issue Summary:</label>
+      <input type="text" id="issue" name="issue" required>
+
+      <label for="description">Detailed Description:</label>
+      <textarea id="description" name="description" required></textarea>
+
+      <label for="Status">Status:</label>
+      <select id="Status" name="Status" required>
+        <option value="">--Select Status--</option>
+        <option value="Pending">Pending</option>
+        <option value="Resolved">Resolved</option>
+        <option value="InProgress">InProgress</option>
+      </select>
+
+      <button type="submit">Save Task Data</button>
+    </form>
+    <p class="success" id="successMessage"></p>
+  </div>
+
+  <button onclick="downloadCSV()">Download CSV</button>
+  <button onclick="clearAllData()" class="delete-btn">Clear All Data</button>
+
+  <h2>Saved Records</h2>
+  <table id="recordsTable">
+    <thead>
+      <tr>
+        <th>Reported By</th>
+        <th>Reported Date</th>
+        <th>Report To</th>
+        <th>Application</th>
+        <th>Priority</th>
+        <th>Issue Summary</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const PASSWORD = "admin123"; // 🔑 Change this to your desired password
+
+    const form = document.getElementById("escalationForm");
+    const tableBody = document.querySelector("#recordsTable tbody");
+    const successMessage = document.getElementById("successMessage");
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const data = collectFormData();
+      saveToLocalStorage(data);
+      successMessage.textContent = "Task data saved successfully!";
+      form.reset();
+      renderTable();
+    });
+
+    function collectFormData() {
+      return {
+        reportedBy: document.getElementById("reportedBy").value,
+        reportedDate: document.getElementById("reportedDate").value,
+        Report_To: document.getElementById("Report_To").value,
+        application: document.getElementById("application").value,
+        priority: document.getElementById("priority").value,
+        issue: document.getElementById("issue").value,
+        description: document.getElementById("description").value,
+        Status: document.getElementById("Status").value
+      };
+    }
+
+    function saveToLocalStorage(data) {
+      const existing = JSON.parse(localStorage.getItem("taskEscalations") || "[]");
+      existing.push(data);
+      localStorage.setItem("taskEscalations", JSON.stringify(existing));
+    }
+
+    function renderTable() {
+      const data = JSON.parse(localStorage.getItem("taskEscalations") || "[]");
+      tableBody.innerHTML = "";
+      data.forEach((d, index) => {
+        const row = `
+          <tr>
+            <td>${d.reportedBy}</td>
+            <td>${d.reportedDate}</td>
+            <td>${d.Report_To}</td>
+            <td>${d.application}</td>
+            <td>${d.priority}</td>
+            <td>${d.issue}</td>
+            <td>${d.description}</td>
+            <td>${d.Status}</td>
+            <td><button class="delete-btn" onclick="deleteRecord(${index})">Delete</button></td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      });
+    }
+
+    function deleteRecord(index) {
+      if (!checkPassword()) return;
+      const data = JSON.parse(localStorage.getItem("taskEscalations") || "[]");
+      if (confirm("Are you sure you want to delete this record?")) {
+        data.splice(index, 1);
+        localStorage.setItem("taskEscalations", JSON.stringify(data));
+        renderTable();
+      }
+    }
+
+    function clearAllData() {
+      if (!checkPassword()) return;
+      if (confirm("Are you sure you want to clear ALL saved data?")) {
+        localStorage.removeItem("taskEscalations");
+        renderTable();
+      }
+    }
+
+    function checkPassword() {
+      const input = prompt("Enter password to proceed:");
+      if (input === PASSWORD) return true;
+      alert("Incorrect password. Access denied.");
+      return false;
+    }
+
+    function downloadCSV() {
+      const data = JSON.parse(localStorage.getItem("taskEscalations") || "[]");
+      if (data.length === 0) return alert("No data to export.");
+
+      const headers = Object.keys(data[0]);
+      const rows = data.map(row => headers.map(h => `"${row[h]}"`).join(","));
+      const csv = [headers.join(","), ...rows].join("\n");
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "task_escalations.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    window.onload = renderTable;
+	
+  const API_URL = "https://script.google.com/macros/s/AKfycbwr4f2CJp3lnd1H6uPt90olGIT93wKh2-nJ22mEpOfA-xQIL09ifvQg_XzrB3H_dfIS/exec"; // Replace with your Apps Script URL
+
+  const form = document.getElementById("escalationForm");
+const tableBody = document.querySelector("#recordsTable tbody");
+const successMessage = document.getElementById("successMessage");
+
+form.addEventListener("submit", function (e) {
+  e.preventDefault();
+  const data = collectFormData();
+
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.result === "success") {
+      successMessage.textContent = "Task data saved successfully!";
+      form.reset();
+      loadRecords(); // Fetch and display latest records
+    } else {
+      alert("Error saving data.");
+    }
+  })
+  .catch(error => console.error("Error:", error));
+});
+
+function collectFormData() {
+  return {
+    reportedBy: document.getElementById("reportedBy").value,
+    reportedDate: document.getElementById("reportedDate").value,
+    Report_To: document.getElementById("Report_To").value,
+    application: document.getElementById("application").value,
+    priority: document.getElementById("priority").value,
+    issue: document.getElementById("issue").value,
+    description: document.getElementById("description").value,
+    Status: document.getElementById("Status").value
+  };
+}
+
+async function loadRecords() {
+  const response = await fetch(API_URL);
+  const data = await response.json();
+
+  tableBody.innerHTML = "";
+  data.records.forEach((d, index) => {
+    const row = `
+      <tr>
+        <td>${d[0]}</td>
+        <td>${d[1]}</td>
+        <td>${d[2]}</td>
+        <td>${d[3]}</td>
+        <td>${d[4]}</td>
+        <td>${d[5]}</td>
+        <td>${d[6]}</td>
+        <td>${d[7]}</td>
+      </tr>
+    `;
+    tableBody.innerHTML += row;
+  });
+}
+
+window.onload = loadRecords;
+
+  </script>
+
+</body>
+</html>
